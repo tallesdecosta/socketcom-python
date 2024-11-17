@@ -28,7 +28,7 @@ class Servidor:
             self.clientes[nome.replace(' ','')] = sock_cliente
 
         print(f'Nova conexão: {endereço}')
-        self.broadcast(f"{nome} entrou no chat, dêem as boas vindas!", nome)
+        self.broadcast(f"{nome} entrou no chat, dêem as boas vindas!")
         message = '\nVocê está acessando o chat BES, PUC-PR. Todas as mensagens que você enviar serão recebidas pelos outros participantes conectados ao chat por padrão. Pra enviar uma mensagem privada, primeiro envie "/p nome do remetente" e depois envie a mensagem. Caso queira sair, digite "/sair".\n'
         sock_cliente.send(message.encode('utf-8'))
         
@@ -47,10 +47,12 @@ class Servidor:
                         self.enviar_mensagem_individual(f"(essa mensagem é privada) {nome}: {mensagem}", destino)
                     
                     elif '/sair' in mensagem:
+                        
+                        self.broadcast(f"usuário {nome} saiu do chat")
                         break
 
                     else: 
-                        self.broadcast(f"{nome}: {mensagem}", nome)
+                        self.broadcast(f"{nome}: {mensagem}")
 
                 else:
                     print(f"Cliente {nome} desconectado.")
@@ -67,15 +69,14 @@ class Servidor:
             sock_cliente.close()
             print(f"Conexão encerrada com o endereço {endereço}")
     
-    def broadcast(self, mensagem, nome_remetente):
+    def broadcast(self, mensagem):
         with self.lock:
             for nome, cliente in self.clientes.items():
-                if nome != nome_remetente:  
-                    try:
-                        cliente.send(mensagem.encode('utf-8'))
-                    except sock.error:
-                        cliente.close()
-                        del self.clientes[nome]
+                try:
+                    cliente.send(mensagem.encode('utf-8'))
+                except sock.error:
+                    cliente.close()
+                    del self.clientes[nome]
 
     def enviar_mensagem_individual(self, mensagem, nome_destinatario):
         """Envia uma mensagem para um único cliente pelo nome."""
